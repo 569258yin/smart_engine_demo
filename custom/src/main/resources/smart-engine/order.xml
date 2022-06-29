@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions
+        xmlns:smart="http://smartengine.org/schema/process"
+        id="order"
+        version="1.0.0"
+        xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+        targetNamespace="refund">
+    <process id="order" isExecutable="false">
+        <startEvent id="start"/>
+
+        <sequenceFlow id="flow_start_to_new" sourceRef="start" targetRef="new"/>
+
+        <serviceTask id="new" name="创建订单"
+                     smart:class="com.manwang.smartengine.demo.database.delegation.CreateOrderJavaDelegation"/>
+
+        <sequenceFlow id="flow_new_to_pending" sourceRef="new" targetRef="pending"/>
+
+        <receiveTask id="pending" name="创建售后审核"
+                     smart:class="com.manwang.smartengine.demo.database.delegation.CreateAuditOrderJavaDelegation"/>
+
+        <sequenceFlow id="pending_to_wait" sourceRef="pending" targetRef="wait_pending_result"/>
+
+        <!--    增加一个等待售后审核暂停点    -->
+        <receiveTask id="wait_pending_result" name="等待售后审核结果"
+                     smart:class="com.manwang.smartengine.demo.database.delegation.EmptyJavaDelegation"/>
+
+        <sequenceFlow id="wait_to_result" sourceRef="wait_pending_result" targetRef="exclusiveGateway_pending"/>
+
+        <exclusiveGateway id="exclusiveGateway_pending" name="exclusiveGateway_pending"/>
+
+        <sequenceFlow id="seq_exclusiveGateway_to_pass" sourceRef="exclusiveGateway_pending" targetRef="processing">
+            <conditionExpression type="mvel"><![CDATA[route.equals("processing")]]></conditionExpression>
+        </sequenceFlow>
+
+        <serviceTask id="processing" name="客服通过审核"
+                     smart:class="com.manwang.smartengine.demo.database.delegation.OrderAuditPassJavaDelegation"/>
+
+        <sequenceFlow id="seq_exclusiveGateway_to_reject" sourceRef="exclusiveGateway_pending" targetRef="reject">
+            <conditionExpression type="mvel"><![CDATA[route.equals("reject")]]></conditionExpression>
+        </sequenceFlow>
+
+        <serviceTask id="reject" name="客服驳回审核"
+                     smart:class="com.manwang.smartengine.demo.database.delegation.OrderAuditRejectJavaDelegation"/>
+
+
+        <sequenceFlow id="flow_reject_to_pass" sourceRef="processing" targetRef="endEvent"/>
+
+        <sequenceFlow id="flow_reject_to_end" sourceRef="reject" targetRef="endEvent"/>
+
+        <endEvent id="endEvent"/>
+
+    </process>
+</definitions>

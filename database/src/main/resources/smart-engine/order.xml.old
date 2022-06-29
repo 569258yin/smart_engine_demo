@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions
+        xmlns:smart="http://smartengine.org/schema/process"
+        id="order"
+        version="1.0.0"
+        xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+        targetNamespace="order">
+    <process id="order" isExecutable="false">
+        <startEvent id="start"/>
+
+        <sequenceFlow id="flow_start_to_new" sourceRef="start" targetRef="new"/>
+
+        <serviceTask id="new" name="创建订单"
+                     smart:class="com.manwang.smartengine.demo.database.delegation.CreateOrderJavaDelegation"/>
+
+        <sequenceFlow id="flow_new_to_pending" sourceRef="new" targetRef="pending"/>
+
+        <receiveTask id="pending" name="创建审核"
+                     smart:class="com.manwang.smartengine.demo.database.delegation.CreateAuditOrderJavaDelegation"/>
+
+        <sequenceFlow id="pending_to_wait" sourceRef="pending" targetRef="audit_task"/>
+
+        <!--    审核    -->
+        <userTask id="audit_task" name="人工审核" />
+
+        <sequenceFlow id="wait_to_result" sourceRef="audit_task" targetRef="exclusiveGateway_pending"/>
+
+        <exclusiveGateway id="exclusiveGateway_pending" name="exclusiveGateway_pending"/>
+
+        <sequenceFlow id="seq_exclusiveGateway_to_pass" sourceRef="exclusiveGateway_pending" targetRef="audit_pass">
+            <conditionExpression type="mvel"><![CDATA[approve.equals("agree")]]></conditionExpression>
+        </sequenceFlow>
+
+        <serviceTask id="audit_pass" name="客服通过审核"
+                     smart:class="com.manwang.smartengine.demo.database.delegation.OrderAuditPassJavaDelegation"/>
+
+        <sequenceFlow id="seq_exclusiveGateway_to_reject" sourceRef="exclusiveGateway_pending" targetRef="reject">
+            <conditionExpression type="mvel"><![CDATA[approve.equals("reject")]]></conditionExpression>
+        </sequenceFlow>
+
+        <serviceTask id="reject" name="客服驳回审核"
+                     smart:class="com.manwang.smartengine.demo.database.delegation.OrderAuditRejectJavaDelegation"/>
+
+
+        <sequenceFlow id="flow_reject_to_pass" sourceRef="audit_pass" targetRef="endEvent"/>
+
+        <sequenceFlow id="flow_reject_to_end" sourceRef="reject" targetRef="endEvent"/>
+
+        <endEvent id="endEvent"/>
+
+    </process>
+</definitions>
