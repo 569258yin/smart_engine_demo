@@ -8,6 +8,8 @@ import com.alibaba.smart.framework.engine.configuration.impl.DefaultSmartEngine;
 import com.alibaba.smart.framework.engine.exception.EngineException;
 import com.alibaba.smart.framework.engine.service.command.RepositoryCommandService;
 import com.alibaba.smart.framework.engine.util.IOUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -23,6 +25,7 @@ import java.io.InputStream;
 
 import static org.springframework.core.Ordered.LOWEST_PRECEDENCE;
 
+@Slf4j
 @Order(LOWEST_PRECEDENCE)
 @Configuration
 @ConditionalOnClass(SmartEngine.class)
@@ -53,11 +56,20 @@ public class SmartEngineAutoConfiguration implements ApplicationContextAware {
     private class CustomInstanceAccessService implements InstanceAccessor {
         @Override
         public Object access(String name) {
-            try {
-                return applicationContext.getBean(Class.forName(name));
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException("类加载失败");
+            if (StringUtils.isBlank(name)) {
+                return null;
             }
+            // 指定的包名
+            if (StringUtils.contains(name, '.')) {
+                try {
+                    return applicationContext.getBean(Class.forName(name));
+                } catch (ClassNotFoundException e) {
+                    log.error("{}加载失败", name);
+                    throw new RuntimeException("类加载失败");
+                }
+            }
+            // 指定的bean名称
+            return applicationContext.getBean(name);
         }
 
     }
