@@ -1,6 +1,7 @@
 package com.manwang.smartengine.demo.custom.config;
 
 import com.alibaba.smart.framework.engine.SmartEngine;
+import com.alibaba.smart.framework.engine.configuration.ConfigurationOption;
 import com.alibaba.smart.framework.engine.configuration.InstanceAccessor;
 import com.alibaba.smart.framework.engine.configuration.ProcessEngineConfiguration;
 import com.alibaba.smart.framework.engine.configuration.impl.DefaultProcessEngineConfiguration;
@@ -11,6 +12,7 @@ import com.alibaba.smart.framework.engine.util.IOUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
@@ -22,6 +24,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import static org.springframework.core.Ordered.LOWEST_PRECEDENCE;
 
@@ -33,11 +38,23 @@ public class SmartEngineAutoConfiguration implements ApplicationContextAware {
 
     private ApplicationContext applicationContext;
 
+    @Autowired
+    private ExecutorService useExecutor;
+
     @Bean
     @ConditionalOnMissingBean
     public SmartEngine constructSmartEngine() {
         ProcessEngineConfiguration processEngineConfiguration = new DefaultProcessEngineConfiguration();
         processEngineConfiguration.setInstanceAccessor(new CustomInstanceAccessService());
+        // 并发网关需要实现分布式锁
+        processEngineConfiguration.setLockStrategy(new JavaLockStrategyImpl());
+        // 并发线程池配置
+        processEngineConfiguration.setExecutorService((ExecutorService) applicationContext.getBean("defaultExecutor"));
+        Map<String, ExecutorService> executorMap = new HashMap<>();
+        executorMap.put("get_user_executor", (ExecutorService) applicationContext.getBean("useExecutor"));
+        processEngineConfiguration.setExecutorServiceMap(executorMap);
+        // 开启服务编排
+        processEngineConfiguration.getOptionContainer().put(ConfigurationOption.SERVICE_ORCHESTRATION_OPTION);
 
         SmartEngine smartEngine = new DefaultSmartEngine();
         smartEngine.init(processEngineConfiguration);
