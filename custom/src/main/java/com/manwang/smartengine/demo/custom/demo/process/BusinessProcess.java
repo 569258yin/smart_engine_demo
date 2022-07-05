@@ -1,4 +1,4 @@
-package com.manwang.smartengine.demo.custom.process;
+package com.manwang.smartengine.demo.custom.demo.process;
 
 import com.alibaba.smart.framework.engine.annoation.WorkAround;
 import com.alibaba.smart.framework.engine.model.assembly.BaseElement;

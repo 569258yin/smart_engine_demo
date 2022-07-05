@@ -1,7 +1,7 @@
-package com.manwang.smartengine.demo.custom.service.impl;
+package com.manwang.smartengine.demo.custom.demo.service.impl;
 
-import com.manwang.smartengine.demo.custom.process.BusinessProcess;
-import com.manwang.smartengine.demo.custom.service.BusinessProcessService;
+import com.manwang.smartengine.demo.custom.demo.service.BusinessProcessService;
+import com.manwang.smartengine.demo.custom.demo.process.BusinessProcess;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package com.manwang.smartengine.demo.custom.constants;
+package com.manwang.smartengine.demo.custom.demo.constants;
 
 public class ProcessConstant {
 

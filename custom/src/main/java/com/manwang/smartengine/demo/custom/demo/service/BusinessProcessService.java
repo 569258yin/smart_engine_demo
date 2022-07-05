@@ -1,6 +1,6 @@
-package com.manwang.smartengine.demo.custom.service;
+package com.manwang.smartengine.demo.custom.demo.service;
 
-import com.manwang.smartengine.demo.custom.process.BusinessProcess;
+import com.manwang.smartengine.demo.custom.demo.process.BusinessProcess;
 
 public interface BusinessProcessService {
 

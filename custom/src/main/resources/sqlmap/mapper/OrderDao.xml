@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.manwang.smartengine.demo.custom.order.dao.OrderDao">
+    <resultMap id="Base_ResultMap" type="com.manwang.smartengine.demo.custom.order.po.OrderPO">
+        <id column="id" property="id"/>
+        <result column="process_instance" property="processInstance"/>
+        <result column="order_no" property="orderNo"/>
+    </resultMap>
+
+    <sql id="Base_Columns">
+        id, process_instance, order_no
+    </sql>
+
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true"
+            parameterType="com.manwang.smartengine.demo.custom.order.po.OrderPO">
+        insert into `order`(process_instance, order_no)
+        values
+        (
+        #{processInstance},
+        #{orderNo}
+        )
+    </insert>
+
+    <select id="selectOrderById" resultMap="Base_ResultMap">
+        select
+        <include refid="Base_Columns"/>
+        from `order`
+        where id = #{id}
+    </select>
+
+    <update id="updateOrderProcess" parameterType="com.manwang.smartengine.demo.custom.order.po.OrderPO">
+        update `order` set process_instance = #{processInstance}
+        where id = #{id}
+    </update>
+</mapper>

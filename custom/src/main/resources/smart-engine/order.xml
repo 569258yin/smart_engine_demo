@@ -1,53 +1,113 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions
-        xmlns:smart="http://smartengine.org/schema/process"
-        id="order"
-        version="1.0.0"
-        xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
-        targetNamespace="refund">
-    <process id="order" isExecutable="false">
-        <startEvent id="start"/>
-
-        <sequenceFlow id="flow_start_to_new" sourceRef="start" targetRef="new"/>
-
-        <serviceTask id="new" name="创建订单"
-                     smart:class="com.manwang.smartengine.demo.database.delegation.CreateOrderJavaDelegation"/>
-
-        <sequenceFlow id="flow_new_to_pending" sourceRef="new" targetRef="pending"/>
-
-        <receiveTask id="pending" name="创建售后审核"
-                     smart:class="com.manwang.smartengine.demo.database.delegation.CreateAuditOrderJavaDelegation"/>
-
-        <sequenceFlow id="pending_to_wait" sourceRef="pending" targetRef="wait_pending_result"/>
-
-        <!--    增加一个等待售后审核暂停点    -->
-        <receiveTask id="wait_pending_result" name="等待售后审核结果"
-                     smart:class="com.manwang.smartengine.demo.database.delegation.EmptyJavaDelegation"/>
-
-        <sequenceFlow id="wait_to_result" sourceRef="wait_pending_result" targetRef="exclusiveGateway_pending"/>
-
-        <exclusiveGateway id="exclusiveGateway_pending" name="exclusiveGateway_pending"/>
-
-        <sequenceFlow id="seq_exclusiveGateway_to_pass" sourceRef="exclusiveGateway_pending" targetRef="processing">
-            <conditionExpression type="mvel"><![CDATA[route.equals("processing")]]></conditionExpression>
-        </sequenceFlow>
-
-        <serviceTask id="processing" name="客服通过审核"
-                     smart:class="com.manwang.smartengine.demo.database.delegation.OrderAuditPassJavaDelegation"/>
-
-        <sequenceFlow id="seq_exclusiveGateway_to_reject" sourceRef="exclusiveGateway_pending" targetRef="reject">
-            <conditionExpression type="mvel"><![CDATA[route.equals("reject")]]></conditionExpression>
-        </sequenceFlow>
-
-        <serviceTask id="reject" name="客服驳回审核"
-                     smart:class="com.manwang.smartengine.demo.database.delegation.OrderAuditRejectJavaDelegation"/>
-
-
-        <sequenceFlow id="flow_reject_to_pass" sourceRef="processing" targetRef="endEvent"/>
-
-        <sequenceFlow id="flow_reject_to_end" sourceRef="reject" targetRef="endEvent"/>
-
-        <endEvent id="endEvent"/>
-
-    </process>
-</definitions>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_18rhdg0" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.0.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.17.0">
+    <bpmn:process id="order_test" isExecutable="true" camunda:versionTag="1.0.0">
+        <bpmn:startEvent id="StartEvent_1">
+            <bpmn:outgoing>Flow_1ib6stx</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:sequenceFlow id="Flow_1ib6stx" sourceRef="StartEvent_1" targetRef="Activity_1wl8igo" />
+        <bpmn:sequenceFlow id="Flow_0cnk209" sourceRef="Activity_1wl8igo" targetRef="Activity_Start_Audit" />
+        <bpmn:sequenceFlow id="Flow_0cf15le" sourceRef="Activity_Start_Audit" targetRef="Activity_Waiting_Result" />
+        <bpmn:exclusiveGateway id="Gateway_0b6yri9">
+            <bpmn:incoming>Flow_0ivaso7</bpmn:incoming>
+            <bpmn:outgoing>Flow_13k1b0e</bpmn:outgoing>
+            <bpmn:outgoing>Flow_170i0eq</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:sequenceFlow id="Flow_0ivaso7" sourceRef="Activity_Waiting_Result" targetRef="Gateway_0b6yri9" />
+        <bpmn:sequenceFlow id="Flow_13k1b0e" sourceRef="Gateway_0b6yri9" targetRef="Activity_07l1oxz">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">agree.equals("pass")</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="Flow_170i0eq" sourceRef="Gateway_0b6yri9" targetRef="Activity_1i1crgf">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">agree.equals("reject")</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:endEvent id="Event_059ij3k">
+            <bpmn:incoming>Flow_0gkuga0</bpmn:incoming>
+            <bpmn:incoming>Flow_0eydkb2</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_0gkuga0" sourceRef="Activity_1i1crgf" targetRef="Event_059ij3k" />
+        <bpmn:sequenceFlow id="Flow_0eydkb2" sourceRef="Activity_07l1oxz" targetRef="Event_059ij3k" />
+        <bpmn:receiveTask id="Activity_Start_Audit" name="开启审核流程" camunda:class="createAuditOrderJavaDelegation">
+            <bpmn:incoming>Flow_0cnk209</bpmn:incoming>
+            <bpmn:outgoing>Flow_0cf15le</bpmn:outgoing>
+        </bpmn:receiveTask>
+        <bpmn:serviceTask id="Activity_1wl8igo" name="创建订单" camunda:class="createOrderJavaDelegation">
+            <bpmn:incoming>Flow_1ib6stx</bpmn:incoming>
+            <bpmn:outgoing>Flow_0cnk209</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:receiveTask id="Activity_Waiting_Result" name="等待审核结果" camunda:class="waitingAuditJavaDelegation">
+            <bpmn:incoming>Flow_0cf15le</bpmn:incoming>
+            <bpmn:outgoing>Flow_0ivaso7</bpmn:outgoing>
+        </bpmn:receiveTask>
+        <bpmn:serviceTask id="Activity_07l1oxz" name="审核通过" camunda:class="orderAuditPassJavaDelegation">
+            <bpmn:incoming>Flow_13k1b0e</bpmn:incoming>
+            <bpmn:outgoing>Flow_0eydkb2</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:serviceTask id="Activity_1i1crgf" name="审核驳回" camunda:class="orderAuditRejectJavaDelegation">
+            <bpmn:incoming>Flow_170i0eq</bpmn:incoming>
+            <bpmn:outgoing>Flow_0gkuga0</bpmn:outgoing>
+        </bpmn:serviceTask>
+    </bpmn:process>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="order_test">
+            <bpmndi:BPMNEdge id="Flow_0eydkb2_di" bpmnElement="Flow_0eydkb2">
+                <di:waypoint x="970" y="117" />
+                <di:waypoint x="1042" y="117" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_0gkuga0_di" bpmnElement="Flow_0gkuga0">
+                <di:waypoint x="970" y="230" />
+                <di:waypoint x="1006" y="230" />
+                <di:waypoint x="1006" y="117" />
+                <di:waypoint x="1042" y="117" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_170i0eq_di" bpmnElement="Flow_170i0eq">
+                <di:waypoint x="780" y="142" />
+                <di:waypoint x="780" y="230" />
+                <di:waypoint x="870" y="230" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_13k1b0e_di" bpmnElement="Flow_13k1b0e">
+                <di:waypoint x="805" y="117" />
+                <di:waypoint x="870" y="117" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_0ivaso7_di" bpmnElement="Flow_0ivaso7">
+                <di:waypoint x="690" y="117" />
+                <di:waypoint x="755" y="117" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_0cf15le_di" bpmnElement="Flow_0cf15le">
+                <di:waypoint x="530" y="117" />
+                <di:waypoint x="590" y="117" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_0cnk209_di" bpmnElement="Flow_0cnk209">
+                <di:waypoint x="370" y="117" />
+                <di:waypoint x="430" y="117" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_1ib6stx_di" bpmnElement="Flow_1ib6stx">
+                <di:waypoint x="215" y="117" />
+                <di:waypoint x="270" y="117" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+                <dc:Bounds x="179" y="99" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Gateway_0b6yri9_di" bpmnElement="Gateway_0b6yri9" isMarkerVisible="true">
+                <dc:Bounds x="755" y="92" width="50" height="50" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Event_059ij3k_di" bpmnElement="Event_059ij3k">
+                <dc:Bounds x="1042" y="99" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Activity_0rroc3r_di" bpmnElement="Activity_Start_Audit">
+                <dc:Bounds x="430" y="77" width="100" height="80" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Activity_1you37k_di" bpmnElement="Activity_1wl8igo">
+                <dc:Bounds x="270" y="77" width="100" height="80" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Activity_0ujco76_di" bpmnElement="Activity_Waiting_Result">
+                <dc:Bounds x="590" y="77" width="100" height="80" />
+                <bpmndi:BPMNLabel />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Activity_1g9k97j_di" bpmnElement="Activity_07l1oxz">
+                <dc:Bounds x="870" y="77" width="100" height="80" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Activity_0vjxpuk_di" bpmnElement="Activity_1i1crgf">
+                <dc:Bounds x="870" y="190" width="100" height="80" />
+            </bpmndi:BPMNShape>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</bpmn:definitions>

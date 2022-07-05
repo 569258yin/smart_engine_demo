@@ -1,4 +1,4 @@
-package com.manwang.smartengine.demo.custom.delegation;
+package com.manwang.smartengine.demo.custom.order.delegation;
 
 import com.alibaba.smart.framework.engine.context.ExecutionContext;
 import com.alibaba.smart.framework.engine.delegation.JavaDelegation;
@@ -7,9 +7,10 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class EmptyJavaDelegation implements JavaDelegation {
+public class CreateAuditOrderJavaDelegation implements JavaDelegation {
+
     @Override
     public void execute(ExecutionContext executionContext) {
-        log.info("审核中");
+        log.info("发起了审核流程");
     }
 }
